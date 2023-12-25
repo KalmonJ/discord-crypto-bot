@@ -5,6 +5,8 @@ import { CryptoService } from "../services/CryptoService";
 export class CryptoBot {
   bitcoinPrice: number | undefined;
 
+  generalChannelId = "1098072633104400507";
+
   client: Client = new Client({
     intents: [
       GatewayIntentBits.Guilds,
@@ -50,15 +52,59 @@ export class CryptoBot {
   }
 
   async trackingBitcoin() {
-    const fiveHours = 2 * 60 * 1000;
+    const oneHour = 1 * 60 * 60 * 1000;
 
     setInterval(async () => {
       const crypto = await CryptoService.search("bitcoin");
       if (!crypto) return;
       const responseCrypto = await CryptoService.findCryptoById(crypto.id);
-      this.bitcoinPrice = responseCrypto.market_data.current_price.en;
-      console.log("aquii");
-    }, fiveHours);
+
+      if (this.bitcoinPrice) {
+        const initialValue = this.bitcoinPrice;
+        const finalValue = responseCrypto.market_data.current_price.brl;
+        const generalChannel = await this.findGeneralChannel();
+
+        const priceVariationOneHour =
+          ((finalValue - initialValue) / initialValue) * 100;
+
+        if (
+          generalChannel &&
+          generalChannel.isTextBased() &&
+          priceVariationOneHour
+        ) {
+          generalChannel.send(
+            `Notificação: O preço do bitcoin variou em: ${priceVariationOneHour.toFixed(
+              2
+            )}%.\npreço atual em BRL: ${new Intl.NumberFormat("pt-br", {
+              currency: "BRL",
+              style: "currency",
+              maximumFractionDigits: 2,
+            }).format(
+              responseCrypto.market_data.current_price.brl
+            )}\npreço atual em USD: ${new Intl.NumberFormat("en-us", {
+              currency: "USD",
+              style: "currency",
+              maximumFractionDigits: 2,
+            }).format(responseCrypto.market_data.current_price.en)}`
+          );
+        }
+      }
+
+      this.bitcoinPrice = responseCrypto.market_data.current_price.brl;
+    }, oneHour);
+  }
+
+  async findGeneralChannel() {
+    const generalChannel = await this.client.channels.fetch(
+      this.generalChannelId,
+      {
+        allowUnknownGuild: true,
+        cache: true,
+        force: true,
+      }
+    );
+
+    return generalChannel;
   }
 
   async messageCreate() {
@@ -73,15 +119,21 @@ export class CryptoBot {
       }
 
       // pesquisa via chat
-      if (!message.guild && findSearchEntry.test(message.content)) {
+      if (findSearchEntry.test(message.content)) {
         if (rgxResponse && rgxResponse[1]) {
           const cryptoQuery = rgxResponse[1];
           const queryCryptoResponse = await CryptoService.search(cryptoQuery);
 
           if (!isCrypto(queryCryptoResponse)) {
-            await message.author.send(
-              "Ops não encontrei!! Tente pesquiser a sigla ou o nome da moeda."
-            );
+            if (!message.guild) {
+              await message.author.send(
+                "Ops não encontrei!! Tente pesquiser a sigla ou o nome da moeda."
+              );
+            } else {
+              await message.reply(
+                "Ops não encontrei!! Tente pesquiser a sigla ou o nome da moeda."
+              );
+            }
           }
 
           if (isCrypto(queryCryptoResponse)) {
@@ -92,21 +144,37 @@ export class CryptoBot {
             const percentageChange =
               crypto.market_data.price_change_percentage_24h;
 
-            await message.author.send(
-              `Encontrei!!\n\nnome: ${
-                queryCryptoResponse.name
-              }\npreço: ${new Intl.NumberFormat("pt-br", {
-                currency: "BRL",
-                style: "currency",
-                maximumFractionDigits: 2,
-              }).format(crypto.market_data.current_price.brl)}\nvariação: ${
-                percentageChange > 0
-                  ? `${percentageChange.toFixed(2)}% \u2191`
-                  : percentageChange == 0
-                  ? `${percentageChange.toFixed(2)}`
-                  : `${percentageChange.toFixed(2)}% \u2193`
-              }`
-            );
+            if (!message.guild) {
+              await message.author.send(
+                `Encontrei!!\n\nnome: ${
+                  queryCryptoResponse.name
+                }\npreço: ${new Intl.NumberFormat("pt-br", {
+                  currency: "BRL",
+                  style: "currency",
+                }).format(crypto.market_data.current_price.brl)}\nvariação: ${
+                  percentageChange > 0
+                    ? `${percentageChange.toFixed(2)}% \u2191`
+                    : percentageChange == 0
+                    ? `${percentageChange.toFixed(2)}`
+                    : `${percentageChange.toFixed(2)}% \u2193`
+                }`
+              );
+            } else {
+              await message.reply(
+                `Encontrei!!\n\nnome: ${
+                  queryCryptoResponse.name
+                }\npreço: ${new Intl.NumberFormat("pt-br", {
+                  currency: "BRL",
+                  style: "currency",
+                }).format(crypto.market_data.current_price.brl)}\nvariação: ${
+                  percentageChange > 0
+                    ? `${percentageChange.toFixed(2)}% \u2191`
+                    : percentageChange == 0
+                    ? `${percentageChange.toFixed(2)}`
+                    : `${percentageChange.toFixed(2)}% \u2193`
+                }`
+              );
+            }
           }
         }
       }
