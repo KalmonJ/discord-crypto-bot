@@ -52,7 +52,7 @@ export class CryptoBot {
   }
 
   async trackingBitcoin() {
-    const oneHour = 1 * 60 * 60 * 1000;
+    const oneHour = 3 * 60 * 60 * 1000;
 
     setInterval(async () => {
       const crypto = await CryptoService.search("bitcoin");
@@ -85,7 +85,7 @@ export class CryptoBot {
               currency: "USD",
               style: "currency",
               maximumFractionDigits: 2,
-            }).format(responseCrypto.market_data.current_price.en)}`
+            }).format(responseCrypto.market_data.current_price.usd)}`
           );
         }
       }

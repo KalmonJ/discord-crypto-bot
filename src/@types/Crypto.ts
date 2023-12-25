@@ -21,7 +21,7 @@ export type Crypto = {
   };
   market_data: {
     current_price: {
-      en: number;
+      usd: number;
       brl: number;
     };
     price_change_24h: number;
