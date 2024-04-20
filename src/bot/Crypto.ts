@@ -1,6 +1,12 @@
-import { Client, GatewayIntentBits, Partials } from "discord.js";
+import {
+  Client,
+  GatewayIntentBits,
+  InternalDiscordGatewayAdapterCreator,
+  Partials,
+} from "discord.js";
 import { isCrypto } from "../@types";
 import { CryptoService } from "../services/CryptoService";
+import { joinVoiceChannel } from "@discordjs/voice";
 
 export class CryptoBot {
   bitcoinPrice: number | undefined;
@@ -47,6 +53,19 @@ export class CryptoBot {
             `nome: ${crypto.item.name}\npreço: ${crypto.item.data.price}\nsímbolo: ${crypto.item.symbol}`
           );
         });
+      }
+
+      if (interaction.commandName === "join") {
+        if (interaction.channel?.isVoiceBased()) {
+          const connection = joinVoiceChannel({
+            channelId: interaction.channelId,
+            guildId: interaction.guildId as string,
+            adapterCreator: interaction.guild
+              ?.voiceAdapterCreator as InternalDiscordGatewayAdapterCreator,
+          });
+
+          console.log(connection);
+        }
       }
     });
   }

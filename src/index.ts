@@ -6,6 +6,10 @@ const commands = [
     name: "trending",
     description: "trending cryptos",
   },
+  {
+    name: "join",
+    description: "join voice channel",
+  },
 ];
 
 const run = async () => {
