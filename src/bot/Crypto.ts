@@ -6,7 +6,16 @@ import {
 } from "discord.js";
 import { isCrypto } from "../@types";
 import { CryptoService } from "../services/CryptoService";
-import { joinVoiceChannel } from "@discordjs/voice";
+import {
+  createAudioPlayer,
+  createAudioResource,
+  joinVoiceChannel,
+  createDefaultAudioReceiveStreamOptions,
+  StreamType,
+} from "@discordjs/voice";
+
+import { createReadStream } from "fs";
+import internal from "stream";
 
 export class CryptoBot {
   bitcoinPrice: number | undefined;
@@ -62,9 +71,20 @@ export class CryptoBot {
             guildId: interaction.guildId as string,
             adapterCreator: interaction.guild
               ?.voiceAdapterCreator as InternalDiscordGatewayAdapterCreator,
+            selfMute: false,
+            selfDeaf: false,
           });
 
-          console.log(connection);
+          const audioStream = createReadStream(
+            "src/assets/Encerramento Do Windows Xp Estourado.mp3"
+          );
+
+          console.log(audioStream);
+
+          const audioPlayer = createAudioPlayer();
+          const resource = createAudioResource(audioStream);
+
+          audioPlayer.play(resource);
         }
       }
     });
