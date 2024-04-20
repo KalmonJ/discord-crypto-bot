@@ -7,8 +7,11 @@ import {
 import { isCrypto } from "../@types";
 import { CryptoService } from "../services/CryptoService";
 import {
+  AudioPlayerStatus,
+  VoiceConnectionStatus,
   createAudioPlayer,
   createAudioResource,
+  getVoiceConnection,
   joinVoiceChannel,
 } from "@discordjs/voice";
 
@@ -70,22 +73,55 @@ export class CryptoBot {
               ?.voiceAdapterCreator as InternalDiscordGatewayAdapterCreator,
             selfMute: false,
             selfDeaf: false,
+            debug: true,
+          });
+          const voiceConnection = getVoiceConnection(
+            interaction.channel.guildId
+          );
+          voiceConnection?.on("debug", (message) => {
+            console.log(message, "menssagem");
           });
 
-          const audioStream = createReadStream(
-            "src/assets/Encerramento Do Windows Xp Estourado.mp3"
-          );
+          if (!voiceConnection) return;
+
+          console.log(voiceConnection, "voice connection");
 
           const audioPlayer = createAudioPlayer();
+          const audioStream = createReadStream("src/assets/audio2.mp3");
           const resource = createAudioResource(audioStream);
+          voiceConnection?.subscribe(audioPlayer);
 
           audioPlayer.play(resource);
-
-          connection.subscribe(audioPlayer);
 
           audioPlayer.on("error", (error) => {
             console.error("ocorreu um erro", error);
           });
+
+          audioPlayer.on(AudioPlayerStatus.Playing, () => {
+            console.log("audio player is running");
+          });
+
+          audioPlayer.on(AudioPlayerStatus.Paused, () => {
+            console.log("audio player is paused");
+          });
+
+          audioPlayer.on(AudioPlayerStatus.Idle, () => {
+            console.log("audio player is idle");
+          });
+
+          voiceConnection?.on(VoiceConnectionStatus.Ready, () => {
+            console.log("connection status is ready");
+          });
+
+          voiceConnection?.on(VoiceConnectionStatus.Connecting, () => {
+            console.log("connection status is connecting");
+          });
+
+          voiceConnection?.on(VoiceConnectionStatus.Disconnected, () => {
+            console.log("connection status is disconnected");
+          });
+
+          await interaction.reply("tocando audio");
         }
       }
     });

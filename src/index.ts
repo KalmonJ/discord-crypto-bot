@@ -1,5 +1,6 @@
 import { createClient } from "./client";
 import { updateCommands } from "./utils/UpdateCommands";
+import { generateDependencyReport } from "@discordjs/voice";
 
 const commands = [
   {
@@ -13,6 +14,7 @@ const commands = [
 ];
 
 const run = async () => {
+  console.log(generateDependencyReport());
   await updateCommands(commands);
   await createClient();
 };
