@@ -10,12 +10,9 @@ import {
   createAudioPlayer,
   createAudioResource,
   joinVoiceChannel,
-  createDefaultAudioReceiveStreamOptions,
-  StreamType,
 } from "@discordjs/voice";
 
 import { createReadStream } from "fs";
-import internal from "stream";
 
 export class CryptoBot {
   bitcoinPrice: number | undefined;
@@ -79,12 +76,16 @@ export class CryptoBot {
             "src/assets/Encerramento Do Windows Xp Estourado.mp3"
           );
 
-          console.log(audioStream);
-
           const audioPlayer = createAudioPlayer();
           const resource = createAudioResource(audioStream);
 
           audioPlayer.play(resource);
+
+          connection.subscribe(audioPlayer);
+
+          audioPlayer.on("error", (error) => {
+            console.error("ocorreu um erro", error);
+          });
         }
       }
     });
